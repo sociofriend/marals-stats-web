@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Marals Statistics</title>
+<!-- The owner's statistics page (GameServer/server.js serves it at /stats). It asks for
+     STATS_KEY, reads /stats/data and computes every figure from those records. -->
+<style>
+:root {
+  --bg1: #2B2090; --bg2: #150F55; --bg3: #0B0A26;
+  --card: rgba(255,255,255,.06); --edge: rgba(255,255,255,.12);
+  --ink: #EDEBFF; --dim: #B4B0E0; --accent: #6B4BF0; --accentText: #A290FF;
+  --good: #57D0E0; --warn: #F2C230; --bad: #FF6B86;
+  --s0: #F2546B; --s1: #F7BC35; --s2: #2FC596; --s3: #4C8DF5; --s4: #FF8A4C; --s5: #A06BF2;
+  --grid: rgba(255,255,255,.08);
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg1: #F8F4EC; --bg2: #F1EBF8; --bg3: #F1EBF8;
+    --card: #FFFFFF; --edge: #E4DACA; --ink: #3B352D; --dim: #6F6657;
+    --accent: #5B3FE0; --accentText: #4A32C8; --good: #1E8FA0; --warn: #B98300; --bad: #C8352B;
+    --grid: rgba(0,0,0,.07);
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+html { background: var(--bg3); }
+body {
+  font: 15px/1.45 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  color: var(--ink); min-height: 100vh;
+  background: radial-gradient(120% 80% at 50% 0%, var(--bg1), var(--bg2) 55%, var(--bg3));
+  background-attachment: fixed;
+}
+.wrap { max-width: 1180px; margin: 0 auto; padding: 20px 16px 60px; }
+header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 18px; }
+.logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 22px; letter-spacing: .2px; }
+.logo i { display: inline-grid; grid-template-columns: repeat(3, 8px); gap: 3px; }
+.logo i b { width: 8px; height: 8px; border-radius: 50%; display: block; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+.chip { padding: 6px 12px; border-radius: 999px; background: var(--card); border: 1px solid var(--edge); font-size: 13px; color: var(--dim); white-space: nowrap; }
+.chip strong { color: var(--ink); }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--good); margin-right: 6px; box-shadow: 0 0 8px var(--good); }
+nav { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px; }
+nav button, .seg button {
+  font: inherit; border: 1px solid var(--edge); background: var(--card); color: var(--dim);
+  padding: 8px 14px; border-radius: 12px; cursor: pointer;
+}
+nav button.on, .seg button.on { background: var(--accent); color: #fff; border-color: transparent; }
+.seg { display: inline-flex; gap: 4px; margin-left: auto; }
+.seg button { padding: 6px 10px; font-size: 13px; }
+.bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.bar h2 { margin: 0; font-size: 18px; }
+.grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); margin-bottom: 14px; }
+.wide { grid-column: 1 / -1; }
+.grid.two { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+.card { background: var(--card); border: 1px solid var(--edge); border-radius: 18px; padding: 16px; min-width: 0; backdrop-filter: blur(8px); }
+.kpi .v { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.kpi .l { color: var(--dim); font-size: 13px; }
+.kpi .d { color: var(--dim); font-size: 12px; margin-top: 4px; }
+.kpi .vs, .sub { font-size: 13px; font-weight: 400; color: var(--dim); }
+.card .note { margin-top: 10px; }
+.card h3 { margin: 0 0 10px; font-size: 14px; font-weight: 600; color: var(--dim); }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { fill: var(--dim); font-size: 10px; }
+.tbl { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+th, td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+th:first-child, td:first-child, th.l, td.l { text-align: left; }
+th { color: var(--dim); font-weight: 600; cursor: pointer; user-select: none; position: sticky; top: 0; }
+th.sorted::after { content: " ▾"; }
+td code { font-size: 12px; color: var(--dim); }
+.tag { display: inline-block; padding: 1px 7px; border-radius: 6px; font-size: 11px; background: var(--grid); color: var(--dim); margin-left: 4px; }
+.good { color: var(--good); } .bad { color: var(--bad); }
+input[type=search], input[type=password] {
+  font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--edge);
+  border-radius: 12px; padding: 8px 12px; min-width: 0;
+}
+.lock { max-width: 360px; margin: 18vh auto 0; text-align: center; }
+.lock form { display: flex; gap: 8px; margin-top: 16px; }
+.lock input { flex: 1; }
+.lock button { font: inherit; border: 0; border-radius: 12px; padding: 8px 16px; background: var(--accent); color: #fff; cursor: pointer; }
+.msg { color: var(--bad); min-height: 1.4em; margin-top: 10px; }
+.empty { color: var(--dim); padding: 24px; text-align: center; }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--dim); margin-top: 8px; }
+.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; background: var(--c); vertical-align: -1px; }
+.note { color: var(--dim); font-size: 12px; margin-top: 18px; }
+section[hidden] { display: none; }
+h2.sec { font-size: 15px; font-weight: 600; color: var(--dim); margin: 4px 0 10px; letter-spacing: .3px; }
+.kf { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+.kf .v { font-size: 22px; }
+.viz { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-height: 92px; margin-bottom: 8px; }
+.viz > svg:not(.ring) { flex: 1; }
+.ring .rc { fill: var(--ink); font-size: 19px; font-weight: 700; }
+.rl { display: flex; gap: 10px; width: 100%; font-size: 12px; color: var(--dim); }
+.rl span { width: 92px; text-align: center; }
+.marbles { display: flex; gap: 5px; flex-wrap: wrap; }
+.marbles b { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--c); opacity: .35; }
+.marbles b.in { background: radial-gradient(circle at 35% 30%, #fff8, var(--c) 55%); opacity: 1; }
+.mini { height: 5px; border-radius: 3px; background: var(--grid); margin-top: 5px; min-width: 70px; overflow: hidden; }
+.mini i { display: block; height: 100%; border-radius: 3px; }
+.pcard { width: 58px; height: 80px; border-radius: 9px; background: #FBF5E6; color: #C8352B; display: grid; place-items: center;
+  font: 700 24px/1 Georgia, serif; box-shadow: 0 6px 18px #0005; border: 1px solid #E4DACA; transform: rotate(-6deg); }
+/* One-shot animations when a tab or range is opened; none on the quiet 2-minute refresh. */
+.go .card { animation: rise .55s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--n, 0) * 45ms); }
+.go rect.b { transform-box: fill-box; transform-origin: 50% 100%; animation: grow .8s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(150ms + var(--i) * 22ms); }
+.go .arc { animation: draw 1.1s cubic-bezier(.3,.7,.2,1) both .15s; }
+.arc { stroke-dasharray: var(--p) 100; }
+.go .marbles b.in { animation: drop .45s cubic-bezier(.3,1.4,.5,1) both; animation-delay: calc(250ms + var(--i) * 90ms); }
+.go .mini i { animation: fill 1s cubic-bezier(.2,.8,.2,1) both .2s; }
+.go .pcard { animation: flip .8s cubic-bezier(.2,.8,.2,1) both .2s; }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+@keyframes grow { from { transform: scaleY(0); } }
+@keyframes draw { from { stroke-dasharray: 0 100; } }
+@keyframes drop { from { transform: translateY(-14px) scale(.4); opacity: 0; } }
+@keyframes fill { from { width: 0; } }
+@keyframes flip { from { transform: rotateY(90deg) rotate(-6deg); } }
+@media (prefers-reduced-motion: reduce) { .go * { animation: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="lock" class="lock" hidden>
+    <div class="logo" style="justify-content:center"><i id="logo1"></i>Marals statistics</div>
+    <form id="unlock"><input id="key" type="password" placeholder="Passcode" autocomplete="current-password" required><button>Open</button></form>
+    <div class="msg" id="lockMsg"></div>
+  </div>
+
+  <div id="app" hidden>
+    <header>
+      <div class="logo"><i id="logo2"></i>Marals statistics</div>
+      <div class="chips">
+        <span class="chip"><span class="dot"></span><strong id="online">0</strong> online now</span>
+        <span class="chip"><strong id="live">0</strong> games in play</span>
+        <span class="chip" id="updated"></span>
+      </div>
+    </header>
+    <div class="bar">
+      <nav id="tabs">
+        <button data-tab="overview" class="on">Overview</button>
+        <button data-tab="players">Players</button>
+        <button data-tab="bots">Bots</button>
+        <button data-tab="game">Game</button>
+      </nav>
+      <div class="seg" id="range">
+        <button data-days="1">Today</button><button data-days="7">7 days</button>
+        <button data-days="30" class="on">30 days</button><button data-days="0">All</button>
+      </div>
+    </div>
+    <section id="overview"></section>
+    <section id="players" hidden></section>
+    <section id="bots" hidden></section>
+    <section id="game" hidden></section>
+    <p class="note" id="note"></p>
+  </div>
+</div>
+<script>
+'use strict';
+const SEATS = ['--s0', '--s1', '--s2', '--s3', '--s4', '--s5'];
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const $ = id => document.getElementById(id);
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { v === null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) { /* private mode */ } },
+};
+for (const id of ['logo1', 'logo2']) $(id).innerHTML = SEATS.map(s => `<b style="background:var(${s})"></b>`).join('');
+
+// ---------- formatting ----------
+const fmtTime = sec => {
+  sec = Math.round(sec || 0);
+  if (sec < 60) return sec + 's';
+  if (sec < 3600) return Math.floor(sec / 60) + 'm ' + String(sec % 60).padStart(2, '0') + 's';
+  return Math.floor(sec / 3600) + 'h ' + String(Math.floor(sec / 60) % 60).padStart(2, '0') + 'm';
+};
+const pct = (a, b) => b ? Math.round(100 * a / b) + '%' : '–';
+const num = n => (n ?? 0).toLocaleString('en');
+const avg = (a, b) => b ? (a / b).toFixed(1) : '–';
+const median = a => { if (!a.length) return 0; const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+const RANK = r => ({ 0: 'Joker', 1: 'A', 11: 'J', 12: 'Q', 13: 'K' }[r] || String(r));
+
+// ---------- charts (plain SVG) ----------
+function bars(labels, series, { h = 170, stacked = true, axis = true } = {}) {
+  const W = 600, pad = axis ? { l: 30, r: 6, t: 8, b: 22 } : { l: 0, r: 0, t: 4, b: 0 };
+  const totals = labels.map((_, i) => stacked ? series.reduce((t, s) => t + s.values[i], 0) : Math.max(...series.map(s => s.values[i])));
+  const max = Math.max(1, ...totals);
+  const top = Math.ceil(max / 4) * 4; // whole numbers on every grid line
+  const iw = W - pad.l - pad.r, ih = h - pad.t - pad.b, bw = iw / labels.length;
+  const y = v => pad.t + ih - ih * v / top;
+  let out = '';
+  for (let k = 0; axis && k <= 4; k++) {
+    const v = top * k / 4, yy = y(v);
+    out += `<line x1="${pad.l}" x2="${W - pad.r}" y1="${yy}" y2="${yy}" stroke="var(--grid)"/><text x="${pad.l - 4}" y="${yy + 3}" text-anchor="end">${v}</text>`;
+  }
+  const every = Math.ceil(labels.length / 14);
+  labels.forEach((lab, i) => {
+    let base = 0;
+    const x = pad.l + i * bw + bw * 0.14, w = Math.max(1, bw * 0.72);
+    series.forEach((s, j) => {
+      const v = s.values[i];
+      if (!v) return;
+      const sw = stacked ? w : w / series.length, sx = stacked ? x : x + j * sw;
+      const y0 = stacked ? y(base + v) : y(v), y1 = stacked ? y(base) : y(0);
+      out += `<rect class="b" style="--i:${i}" x="${sx}" y="${y0}" width="${sw}" height="${Math.max(0, y1 - y0)}" rx="${Math.min(3, sw / 3)}" fill="${s.color}"><title>${esc(lab)} · ${esc(s.name)}: ${v}</title></rect>`;
+      if (stacked) base += v;
+    });
+    if (axis && i % every === 0) out += `<text x="${x + w / 2}" y="${h - 6}" text-anchor="middle">${esc(lab)}</text>`;
+  });
+  const legend = series.length > 1 ? `<div class="legend">${series.map(s => `<span style="--c:${s.color}">${esc(s.name)}</span>`).join('')}</div>` : '';
+  return `<svg viewBox="0 0 ${W} ${h}" role="img">${out}</svg>${legend}`;
+}
+const card = (title, body, cls = '') => `<div class="card ${cls}"><h3>${esc(title)}</h3>${body}</div>`;
+const kpi = (v, l) => `<div class="card kpi"><div class="v">${v}</div><div class="l">${esc(l)}</div></div>`;
+const empty = t => `<div class="card empty">${esc(t)}</div>`;
+
+function table(id, cols, rows, sortKey) {
+  const st = state.sort[id] || { key: sortKey, dir: -1 };
+  rows = [...rows].sort((a, b) => {
+    const x = a[st.key], y = b[st.key];
+    return (typeof x === 'string' ? x.localeCompare(y) : (x ?? -1) - (y ?? -1)) * st.dir;
+  });
+  const head = cols.map(c => `<th data-t="${id}" data-k="${c.k}" class="${c.l ? 'l ' : ''}${st.key === c.k ? 'sorted' : ''}">${esc(c.t)}</th>`).join('');
+  const body = rows.map(r => `<tr>${cols.map(c => `<td class="${c.l ? 'l' : ''}">${c.f ? c.f(r) : esc(r[c.k])}</td>`).join('')}</tr>`).join('');
+  return `<div class="tbl"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+}
+
+// ---------- data ----------
+const state = { data: null, tab: 'overview', days: 30, sort: {}, q: '' };
+
+function dayList(days) {
+  const all = new Set([...Object.keys(state.data.sessions), ...Object.keys(state.data.games)]);
+  const sorted = [...all].sort();
+  if (!days) return sorted;
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: state.data.tz }).format(new Date());
+  const from = new Intl.DateTimeFormat('en-CA', { timeZone: state.data.tz }).format(new Date(Date.now() - (days - 1) * 864e5));
+  const out = [];
+  for (let d = new Date(from + 'T12:00:00Z'); ; d = new Date(+d + 864e5)) {
+    const s = d.toISOString().slice(0, 10);
+    out.push(s);
+    if (s >= today) break;
+  }
+  return out;
+}
+const hourOf = sec => Number(new Intl.DateTimeFormat('en-GB', { timeZone: state.data.tz, hour: '2-digit', hourCycle: 'h23' }).format(new Date(sec * 1000)));
+
+/** Everything the tabs show, computed from the recorded sessions and games of the chosen days. */
+function compute() {
+  const d = state.data, days = dayList(state.days);
+  const sessions = days.flatMap(x => d.sessions[x] || []);
+  const games = days.flatMap(x => d.games[x] || []);
+  const firstSeen = new Map();
+  for (const x of Object.keys(d.sessions).sort()) for (const s of d.sessions[x]) if (!firstSeen.has(s[0])) firstSeen.set(s[0], x);
+
+  const players = new Map();
+  const P = id => {
+    if (!players.has(id)) players.set(id, { id, names: new Set(), ips: new Set(), name: '', sessions: 0, sec: 0, last: 0, first: firstSeen.get(id) || '', games: 0, wins: 0, losses: 0, unfinished: 0, withBots: 0, humansOnly: 0, moves: 0, timeouts: 0 });
+    return players.get(id);
+  };
+  for (const [id, start, sec, name, ip] of sessions) {
+    const p = P(id);
+    p.sessions++; p.sec += sec;
+    if (name) p.names.add(name);
+    if (ip) p.ips.add(ip);
+    if (start >= p.last) { p.last = start; if (name) p.name = name; }
+  }
+  for (const g of games) {
+    const hasBot = g.seats.some(s => s.botMoves > 0);
+    for (const s of g.seats) for (const h of s.humans) {
+      const p = P(h.id);
+      p.games++; p.moves += h.moves; p.timeouts += s.timeouts;
+      if (h.name) { p.names.add(h.name); if (!p.name) p.name = h.name; }
+      if (h.ip) p.ips.add(h.ip);
+      if (s.won === true) p.wins++; else if (s.won === false) p.losses++; else p.unfinished++;
+      if (hasBot) p.withBots++; else p.humansOnly++;
+      p.last = Math.max(p.last, Math.round(g.end / 1000));
+    }
+  }
+  return { days, sessions, games, players: [...players.values()], firstSeen };
+}
+
+// ---------- tabs ----------
+function overview(c) {
+  const { days, sessions, games, firstSeen } = c;
+  if (!sessions.length && !games.length) return empty('Nothing recorded in these days yet.');
+  const ids = new Set(sessions.map(s => s[0]));
+  const fresh = [...ids].filter(id => days.includes(firstSeen.get(id))).length;
+  const won = games.filter(g => g.result === 'won');
+  const lab = days.map(x => x.slice(5));
+  const perDay = (f) => days.map(x => f(state.data.sessions[x] || [], state.data.games[x] || []));
+  const hours = Array(24).fill(0);
+  for (const s of sessions) hours[hourOf(s[1])]++;
+  const B = [['<1m', 60], ['1–5m', 300], ['5–15m', 900], ['15–30m', 1800], ['30–60m', 3600], ['1–2h', 7200], ['2h+', Infinity]];
+  const lengths = B.map(() => 0);
+  for (const s of sessions) lengths[B.findIndex(([, m]) => s[2] < m)]++;
+  const a = css('--accent'), g2 = css('--good'), w = css('--warn');
+  return `${keyFindings(c)}
+    <h2 class="sec">Activity</h2>
+    <div class="grid">
+      ${kpi(num(ids.size), 'unique players')}
+      ${kpi(num(fresh), 'new players')}
+      ${kpi(num(sessions.length), 'sessions')}
+      ${kpi(fmtTime(sessions.reduce((t, s) => t + s[2], 0)), 'total time connected')}
+      ${kpi(fmtTime(median(sessions.map(s => s[2]))), 'median session')}
+      ${kpi(num(won.length), 'games finished')}
+      ${kpi(num(games.length - won.length), 'games left unfinished')}
+    </div>
+    <div class="grid two">
+      ${card('Unique players per day', bars(lab, [{ name: 'Players', color: a, values: perDay(s => new Set(s.map(x => x[0])).size) }]))}
+      ${card('Sessions per day', bars(lab, [{ name: 'Sessions', color: g2, values: perDay(s => s.length) }]))}
+      ${card('Games per day', bars(lab, [
+        { name: 'Finished', color: g2, values: perDay((s, g) => g.filter(x => x.result === 'won').length) },
+        { name: 'Unfinished', color: w, values: perDay((s, g) => g.filter(x => x.result !== 'won').length) }]))}
+      ${card(`When players connect (${state.data.tz})`, bars(hours.map((_, h) => String(h).padStart(2, '0')), [{ name: 'Sessions started', color: a, values: hours }]))}
+      ${card('How long sessions last', bars(B.map(b => b[0]), [{ name: 'Sessions', color: g2, values: lengths }]))}
+    </div>`;
+}
+
+function playersTab(c) {
+  const q = state.q.toLowerCase();
+  const rows = c.players.filter(p => !q || [p.name, p.id, ...p.names, ...p.ips].some(x => String(x).toLowerCase().includes(q)))
+    .map(p => ({ ...p, rate: p.wins + p.losses ? p.wins / (p.wins + p.losses) : null, ipText: [...p.ips].join(', '), other: [...p.names].filter(n => n !== p.name).join(', ') }));
+  if (!c.players.length) return empty('No players in these days yet.');
+  return `
+    <div class="bar"><input type="search" id="q" placeholder="Search a name, ID or IP" value="${esc(state.q)}" style="flex:1"></div>
+    ${card(`${rows.length} players`, table('players', [
+      { k: 'name', t: 'Player', l: 1, f: r => `${esc(r.name || '—')}${r.other ? `<span class="tag" title="Also played as">${esc(r.other)}</span>` : ''}<br><code>${esc(r.id)}</code>` },
+      { k: 'ipText', t: 'IP address', l: 1, f: r => `<code>${esc(r.ipText || '—')}</code>` },
+      { k: 'sessions', t: 'Sessions' },
+      { k: 'sec', t: 'Time', f: r => fmtTime(r.sec) },
+      { k: 'games', t: 'Games' },
+      { k: 'wins', t: 'Wins', f: r => `<span class="good">${r.wins}</span>` },
+      { k: 'losses', t: 'Losses', f: r => `<span class="bad">${r.losses}</span>` },
+      { k: 'rate', t: 'Win rate', f: r => r.rate === null ? '–' : Math.round(r.rate * 100) + '%' },
+      { k: 'humansOnly', t: 'Only people' },
+      { k: 'withBots', t: 'With bots' },
+      { k: 'timeouts', t: 'Timed out' },
+      { k: 'first', t: 'First seen', l: 1 },
+      { k: 'last', t: 'Last seen', l: 1, f: r => r.last ? new Date(r.last * 1000).toLocaleString('en-GB', { timeZone: state.data.tz, dateStyle: 'medium', timeStyle: 'short' }) : '–' },
+    ], rows, 'last'))}
+    <p class="note">Wins and losses count every finished game in which the player made at least one move for the seat. "With bots" means a bot made at least one move in that game.</p>`;
+}
+
+// Seats: played by a person only, a bot only, or both (a bot took over, or a person took a bot's seat).
+const seatKind = s => !s.humans.length ? 'bot' : s.botMoves ? 'mixed' : 'human';
+const rateText = (w, n) => n ? `${Math.round(100 * w / n)}%<span class="sub"> ${w} of ${n}</span>` : '–';
+const fact = (v, title, detail, visual = '') => `<div class="card kpi">${visual ? `<div class="viz">${visual}</div>` : ''}<div class="l">${esc(title)}</div><div class="v">${v}</div><div class="d">${detail}</div></div>`;
+const minutes = g => (g.end - g.start) / 60000;
+const people = g => new Set(g.seats.flatMap(s => s.humans.map(h => h.id))).size;
+const share = (w, n) => n ? Math.round(100 * w / n) : 0;
+
+// ---------- visuals ----------
+/** A ring filled to `pct` %, with an optional tick at `mark` % (an even chance). */
+function ring(pct, color, center, mark = null, size = 92) {
+  const r = 40, tick = mark === null ? '' : (() => {
+    const a = (mark / 100) * 2 * Math.PI - Math.PI / 2;
+    return `<line x1="${50 + 33 * Math.cos(a)}" y1="${50 + 33 * Math.sin(a)}" x2="${50 + 47 * Math.cos(a)}" y2="${50 + 47 * Math.sin(a)}" stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round"><title>An even chance: ${mark}%</title></line>`;
+  })();
+  return `<svg class="ring" viewBox="0 0 100 100" style="width:${size}px">
+    <circle cx="50" cy="50" r="${r}" fill="none" stroke="var(--grid)" stroke-width="10"/>
+    <circle class="arc" cx="50" cy="50" r="${r}" fill="none" stroke="${color}" stroke-width="10" stroke-linecap="round" pathLength="100" style="--p:${Math.max(0.001, pct)}" transform="rotate(-90 50 50)"/>
+    ${tick}<text x="50" y="56" text-anchor="middle" class="rc">${center}</text></svg>`;
+}
+/** Marbles in a row: `filled` of `total`, as on the board. */
+const marbles = (filled, total, color) => `<div class="marbles">${Array.from({ length: total }, (_, i) => `<b class="${i < filled ? 'in' : ''}" style="--c:${color};--i:${i}"></b>`).join('')}</div>`;
+/** A thin bar inside a table cell, `pct` % wide. */
+const mini = (pct, color) => `<div class="mini"><i style="width:${Math.min(100, pct)}%;background:${color}"></i></div>`;
+
+// ---------- facts shared by the tabs and the key findings ----------
+function botFacts(games) {
+  const done = games.filter(g => g.result === 'won');
+  const withBots = games.filter(g => g.seats.some(s => s.botMoves > 0));
+  const solo = withBots.filter(g => people(g) === 1);
+  // Head to head: finished games where some seats were people's and some were bots'.
+  const both = done.filter(g => g.seats.some(s => seatKind(s) === 'human') && g.seats.some(s => seatKind(s) === 'bot'));
+  const side = k => { const r = { seats: 0, wins: 0, cards: 0, cap: 0, lost: 0, burned: 0 };
+    for (const g of both) for (const s of g.seats) if (seatKind(s) === k) { r.seats++; if (s.won) r.wins++; r.cards += s.played + s.burned; r.cap += s.captured; r.lost += s.lost; r.burned += s.burned; }
+    return r; };
+  const takeovers = games.flatMap(g => g.seats).filter(s => s.timeouts > 0).length;
+  // Teams by make-up, in finished games.
+  const teams = { 'Only people': [0, 0], 'People with a bot partner': [0, 0], 'Only bots': [0, 0] };
+  for (const g of done) for (let t = 0; t < g.k; t++) {
+    const ks = g.seats.filter(s => s.team === t).map(seatKind);
+    const k = ks.every(x => x === 'bot') ? 'Only bots' : ks.every(x => x === 'human') ? 'Only people' : 'People with a bot partner';
+    teams[k][0]++; if (g.winnerTeam === t) teams[k][1]++;
+  }
+  return { withBots, solo, both, P: side('human'), B: side('bot'), takeovers, teams };
+}
+
+function gameFacts(games) {
+  const done = games.filter(g => g.result === 'won');
+  // Going first: did the team of the player who started win? (games recorded with firstSeat)
+  const known = done.filter(g => g.firstSeat != null);
+  const firstWins = known.filter(g => g.seats[g.firstSeat].team === g.winnerTeam).length;
+  const even = known.length ? Math.round(100 * known.reduce((t, g) => t + 1 / g.k, 0) / known.length) : 0;
+  // How close the losing teams came: their marbles home at the end, of all they needed.
+  const close = done.filter(g => g.seats[0].home != null).map(g => {
+    const need = 4 * g.n / g.k;
+    return Math.max(...Array.from({ length: g.k }, (_, t) => t).filter(t => t !== g.winnerTeam)
+      .map(t => g.seats.filter(s => s.team === t).reduce((a, s) => a + s.home, 0))) / need;
+  });
+  const ranks = {};
+  for (const g of games) for (const [r, [p, b]] of Object.entries(g.ranks)) { const x = ranks[r] || (ranks[r] = [0, 0]); x[0] += p; x[1] += b; }
+  const rk = Object.keys(ranks).map(Number).sort((a, b) => (a || 99) - (b || 99));
+  const burnPct = rk.map(r => share(ranks[r][1], ranks[r][0] + ranks[r][1]));
+  const caps = games.reduce((t, g) => t + g.seats.reduce((a, s) => a + s.captured, 0), 0);
+  const own = games.reduce((t, g) => t + g.seats.reduce((a, s) => a + s.ownCaptures, 0), 0);
+  return { done, known, firstWins, even, close, ranks, rk, burnPct, caps, own,
+    left: games.filter(g => g.result === 'abandoned'), restarted: games.filter(g => g.result === 'interrupted') };
+}
+
+/** The headline numbers, each with a picture and one plain sentence. */
+function keyFindings(c) {
+  const { games, sessions } = c;
+  const b = botFacts(games), g = gameFacts(games), out = [];
+  const a = css('--accent'), good = css('--good'), warn = css('--warn'), bad = css('--bad');
+  if (b.both.length) {
+    const p = share(b.P.wins, b.P.seats), q = share(b.B.wins, b.B.seats);
+    out.push(fact(`${p}% <span class="vs">vs</span> ${q}%`, 'People vs bots',
+      p === q ? 'People and bots win equally often.' : p > q ? `People win more often than bots (${b.both.length} games with both).` : `Bots win more often than people (${b.both.length} games with both).`,
+      `${ring(p, a, `${p}%`)}${ring(q, good, `${q}%`)}<div class="rl"><span>People</span><span>Bots</span></div>`));
+  }
+  if (g.known.length) {
+    const p = share(g.firstWins, g.known.length);
+    out.push(fact(`${p}%`, 'Going first', Math.abs(p - g.even) < 5 ? 'Starting first gives no clear edge.' : p > g.even ? `Starting first helps: an even chance would be ${g.even}%.` : `Starting first does not help: an even chance would be ${g.even}%.`,
+      ring(p, warn, `${p}%`, g.even)));
+  }
+  if (g.close.length) {
+    const p = Math.round(100 * median(g.close));
+    out.push(fact(`${p}%`, 'How close the loser got', `The losing team typically had ${p}% of its marbles home at the end.`, marbles(Math.round(p / 12.5), 8, bad)));
+  }
+  if (games.length) {
+    const p = share(g.done.length, games.length);
+    out.push(fact(`${p}%`, 'Games finished', `${g.done.length} of ${games.length} games were played to the end.`, ring(p, good, `${p}%`)));
+  }
+  if (g.rk.length) {
+    const i = g.burnPct.indexOf(Math.max(...g.burnPct));
+    out.push(fact(`${g.burnPct[i]}%`, 'The hardest card to use', `${RANK(g.rk[i])} is burned ${g.burnPct[i]}% of the time: often it has no move.`, `<div class="pcard">${RANK(g.rk[i])}</div>`));
+  }
+  if (sessions.length) {
+    const hours = Array(24).fill(0);
+    for (const s of sessions) hours[hourOf(s[1])]++;
+    const h = hours.indexOf(Math.max(...hours));
+    out.push(fact(`${String(h).padStart(2, '0')}:00`, 'The busiest hour', `Most sessions start between ${h}:00 and ${h + 1}:00.`, bars(hours.map((_, i) => ''), [{ name: 'Sessions', color: a, values: hours }], { h: 70, axis: false })));
+  }
+  return out.length ? `<h2 class="sec">Key findings</h2><div class="grid kf">${out.join('')}</div>` : '';
+}
+
+function botsTab(c) {
+  const { games, days } = c;
+  if (!games.length) return empty('No games in these days yet.');
+  const { withBots, solo, both, P, B, takeovers, teams } = botFacts(games);
+  const lab = days.map(x => x.slice(5));
+  const perDay = f => days.map(x => (state.data.games[x] || []).filter(f).length);
+  const per100 = (x, n) => n ? 100 * x / n : 0;
+  const a = css('--accent'), good = css('--good'), bad = css('--bad');
+  const capMax = Math.max(per100(P.cap, P.cards), per100(B.cap, B.cards), 0.1), lostMax = Math.max(per100(P.lost, P.cards), per100(B.lost, B.cards), 0.1);
+  const row = (name, r, color) => `<tr><td class="l">${name}</td><td>${r.seats}</td>
+    <td>${rateText(r.wins, r.seats)}${mini(share(r.wins, r.seats), color)}</td>
+    <td>${r.cards ? per100(r.cap, r.cards).toFixed(1) : '–'}${mini(100 * per100(r.cap, r.cards) / capMax, good)}</td>
+    <td>${r.cards ? per100(r.lost, r.cards).toFixed(1) : '–'}${mini(100 * per100(r.lost, r.cards) / lostMax, bad)}</td>
+    <td>${r.cards ? share(r.burned, r.cards) + '%' : '–'}${mini(share(r.burned, r.cards), bad)}</td></tr>`;
+  const p = share(P.wins, P.seats), q = share(B.wins, B.seats);
+  return `
+    <div class="grid">
+      ${fact(both.length ? `${p}% <span class="vs">vs</span> ${q}%` : '–', 'People vs bots: how often each wins',
+        both.length ? `people's seats vs bots' seats, in ${both.length} finished games with both` : 'no finished game had both yet',
+        both.length ? `${ring(p, a, `${p}%`)}${ring(q, good, `${q}%`)}<div class="rl"><span>People</span><span>Bots</span></div>` : '')}
+      ${fact(rateText(withBots.length, games.length), 'Games with at least one bot', 'of all games started', ring(share(withBots.length, games.length), good, `${share(withBots.length, games.length)}%`))}
+      ${fact(num(solo.length), 'One person against bots', `games with a single person and bots, ${share(solo.length, games.length)}% of all`, ring(share(solo.length, games.length), a, `${share(solo.length, games.length)}%`))}
+      ${fact(num(takeovers), 'A bot stepped in', 'times a player ran out of turn time and a bot took the seat')}
+    </div>
+    <div class="grid two">
+      ${card('Bots and people, head to head', `<div class="tbl"><table><thead><tr><th class="l">Seat played by</th><th>Seats</th><th>Won</th><th>Captures per 100 cards</th><th>Marbles lost per 100 cards</th><th>Cards burned</th></tr></thead><tbody>
+        ${row('People', P, a)}${row('Bots', B, good)}</tbody></table></div>
+        <p class="note">Only finished games where people and bots both had seats. A seat a bot took over mid-game counts for neither. Captures and losses are per 100 cards played, so a long game does not count more.</p>`, 'wide')}
+      ${card('Teams: who wins', `<div class="tbl"><table><thead><tr><th class="l">Team made of</th><th>Teams</th><th>Won</th></tr></thead><tbody>
+        ${Object.entries(teams).map(([k, [n, w]]) => `<tr><td class="l">${k}</td><td>${n}</td><td>${rateText(w, n)}${mini(share(w, n), a)}</td></tr>`).join('')}</tbody></table></div>
+        <p class="note">In finished games. With 2 teams an even chance is 50%; with 3 teams, 33%.</p>`)}
+      ${card('Games per day: with bots or only people', bars(lab, [
+        { name: 'Only people', color: a, values: perDay(g => !g.seats.some(s => s.botMoves > 0)) },
+        { name: 'With bots', color: good, values: perDay(g => g.seats.some(s => s.botMoves > 0)) }]))}
+    </div>`;
+}
+
+function gameTab(c) {
+  const { games } = c;
+  if (!games.length) return empty('No games in these days yet.');
+  const { done, known, firstWins, even, close, ranks, rk, burnPct, caps, own, left, restarted } = gameFacts(games);
+  const mode = g => g.n === 4 ? '4 players, 2 vs 2' : g.k === 3 ? '6 players, 3 pairs' : '6 players, 3 vs 3';
+  const LEN = [['<10m', 10], ['10–20m', 20], ['20–30m', 30], ['30–45m', 45], ['45–60m', 60], ['1h+', Infinity]];
+  const lens = LEN.map(() => 0);
+  for (const g of done) lens[LEN.findIndex(([, m]) => minutes(g) < m)]++;
+  const modes = {};
+  for (const g of games) (modes[mode(g)] || (modes[mode(g)] = [])).push(g);
+  const capPerGame = list => avg(list.reduce((t, g) => t + g.seats.reduce((a, s) => a + s.captured, 0), 0), list.length);
+  const a = css('--accent'), good = css('--good'), bad = css('--bad'), warn = css('--warn');
+  const closeP = close.length ? Math.round(100 * median(close)) : 0;
+  return `
+    <div class="grid">
+      ${fact(rateText(done.length, games.length), 'Games played to the end', `${left.length} left for the lobby or a new game, ${restarted.length} cut by a server restart`, ring(share(done.length, games.length), good, `${share(done.length, games.length)}%`))}
+      ${fact(done.length ? fmtTime(60 * median(done.map(minutes))) : '–', 'A typical game lasts', `median of finished games; ${done.length ? Math.round(median(done.map(g => g.turns / g.n))) : '–'} turns per player`)}
+      ${fact(known.length ? rateText(firstWins, known.length) : '–', 'Going first: the starting team wins', known.length ? `the tick marks an even chance, ${even}%` : 'no finished games yet', known.length ? ring(share(firstWins, known.length), warn, `${share(firstWins, known.length)}%`, even) : '')}
+      ${fact(close.length ? closeP + '%' : '–', 'How close the losing team got', 'median share of its marbles already home when the game ended', close.length ? marbles(Math.round(closeP / 12.5), 8, bad) : '')}
+      ${fact(avg(caps, games.length), 'Marbles sent home per game', `by the other team; ${avg(own, games.length)} by a player's own team (a King jumping over them)`)}
+    </div>
+    <div class="grid two">
+      ${card('How long finished games take', bars(LEN.map(l => l[0]), [{ name: 'Games', color: a, values: lens }]))}
+      ${card('How often each card is burned (no move possible), %', bars(rk.map(RANK), [{ name: 'Burned %', color: bad, values: burnPct }])
+        + `<p class="note">Out of every time the card was used. Most played: ${rk.slice().sort((x, y) => ranks[y][0] - ranks[x][0]).slice(0, 3).map(RANK).join(', ')}.</p>`)}
+      ${card('Modes', `<div class="tbl"><table><thead><tr><th class="l">Mode</th><th>Games</th><th>Finished</th><th>Typical length</th><th>Turns per player</th><th>Captures per game</th></tr></thead><tbody>${Object.entries(modes).map(([k, l]) => {
+        const f = l.filter(g => g.result === 'won');
+        return `<tr><td class="l">${k}</td><td>${l.length}</td><td>${rateText(f.length, l.length)}${mini(share(f.length, l.length), good)}</td><td>${f.length ? fmtTime(60 * median(f.map(minutes))) : '–'}</td><td>${f.length ? Math.round(median(f.map(g => g.turns / g.n))) : '–'}</td><td>${capPerGame(l)}</td></tr>`;
+      }).join('')}</tbody></table></div>`, 'wide')}
+    </div>`;
+}
+
+const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+/** Counts every number in the cards' big figures up from zero, keeping its format. */
+function countUp(root) {
+  const nodes = [];
+  for (const el of root.querySelectorAll('.kpi .v, .ring .rc')) {
+    const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    for (let n; (n = w.nextNode());) if (/\d/.test(n.nodeValue)) nodes.push({ n, text: n.nodeValue });
+  }
+  const t0 = performance.now(), T = 1000;
+  const step = now => {
+    const k = Math.min(1, (now - t0) / T), e = 1 - Math.pow(1 - k, 3);
+    for (const { n, text } of nodes) n.nodeValue = k < 1 ? text.replace(/\d+(\.\d+)?/g, m => (parseFloat(m) * e).toFixed((m.split('.')[1] || '').length).padStart(m[0] === '0' ? m.length : 0, '0')) : text;
+    if (k < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+function render(animate = true) {
+  const c = compute();
+  $('overview').innerHTML = overview(c);
+  $('players').innerHTML = playersTab(c);
+  $('bots').innerHTML = botsTab(c);
+  $('game').innerHTML = gameTab(c);
+  for (const s of document.querySelectorAll('main section, section')) {
+    s.hidden = s.id !== state.tab;
+    s.classList.toggle('go', animate && !still());
+    s.querySelectorAll('.card').forEach((el, i) => el.style.setProperty('--n', Math.min(i, 12)));
+  }
+  if (animate && !still()) countUp($(state.tab));
+  const q = $('q');
+  if (q) q.oninput = () => { state.q = q.value; const pos = q.selectionStart; render(false); const n = $('q'); n.focus(); n.setSelectionRange(pos, pos); };
+}
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-tab]'), r = e.target.closest('[data-days]'), th = e.target.closest('th[data-k]');
+  if (t) { state.tab = t.dataset.tab; for (const b of document.querySelectorAll('[data-tab]')) b.classList.toggle('on', b === t); render(); }
+  if (r) { state.days = Number(r.dataset.days); for (const b of document.querySelectorAll('[data-days]')) b.classList.toggle('on', b === r); render(); }
+  if (th) { const id = th.dataset.t, k = th.dataset.k, s = state.sort[id]; state.sort[id] = { key: k, dir: s && s.key === k ? -s.dir : -1 }; render(false); }
+});
+
+// Served by the game server at /stats, or as a copy elsewhere (GitHub Pages) that reads the live server.
+const API = location.pathname.startsWith('/stats') ? '' : 'https://maralner-jcuj.onrender.com';
+
+async function load(key, animate = true) {
+  if (API) $('lockMsg').textContent = 'Waking the game server, this can take a minute…';
+  const res = await fetch(API + '/stats/data', { headers: { Authorization: 'Bearer ' + key }, cache: 'no-store' });
+  if (res.status === 403) throw new Error('Wrong passcode');
+  if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'The server could not answer');
+  state.data = await res.json();
+  $('online').textContent = state.data.online;
+  $('live').textContent = state.data.live;
+  $('updated').textContent = 'Updated ' + new Date().toLocaleTimeString('en-GB', { timeZone: state.data.tz, hour: '2-digit', minute: '2-digit' });
+  $('note').textContent = `Days and hours in ${state.data.tz}. A session is one stretch of time an app stays connected (reconnects within a minute are the same session). Players are known by their app's ID; names and IP addresses are what the server saw.`;
+  $('lock').hidden = true; $('app').hidden = false; $('lockMsg').textContent = '';
+  render(animate);
+}
+
+$('unlock').onsubmit = async e => {
+  e.preventDefault();
+  const key = $('key').value.trim();
+  $('lockMsg').textContent = '';
+  try { await load(key); store.set('marals-stats-key', key); }
+  catch (err) { $('lockMsg').textContent = err.message; }
+};
+
+(async () => {
+  const key = store.get('marals-stats-key');
+  if (key) {
+    try { await load(key); } catch (err) { store.set('marals-stats-key', null); $('lockMsg').textContent = err.message; $('lock').hidden = false; }
+  } else $('lock').hidden = false;
+  // Refresh every 2 minutes while the page is open and visible.
+  setInterval(() => { const k = store.get('marals-stats-key'); if (k && !document.hidden) load(k, false).catch(() => {}); }, 120000);
+})();
+</script>
+</body>
+</html>
