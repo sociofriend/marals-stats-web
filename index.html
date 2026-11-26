@@ -49,6 +49,8 @@ nav button, .seg button {
 }
 nav button.on, .seg button.on { background: var(--accent); color: #fff; border-color: transparent; }
 .seg { display: inline-flex; gap: 4px; margin-left: auto; }
+#range { margin-left: 0; }
+.bar .seg { flex-wrap: wrap; }
 .seg button { padding: 6px 10px; font-size: 13px; }
 .bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
 .bar h2 { margin: 0; font-size: 18px; }
@@ -116,6 +118,83 @@ h2.sec { font-size: 15px; font-weight: 600; color: var(--dim); margin: 4px 0 10p
 @keyframes drop { from { transform: translateY(-14px) scale(.4); opacity: 0; } }
 @keyframes fill { from { width: 0; } }
 @keyframes flip { from { transform: rotateY(90deg) rotate(-6deg); } }
+/* Each tab is one picture story: a headline, infographic tiles, one line of conclusion. Details in tooltips. */
+.story { margin-bottom: 14px; }
+.kicker { color: var(--accentText); font-size: 13px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; margin: 6px 0 4px; }
+.headline { font-size: clamp(26px, 4.4vw, 42px); line-height: 1.1; margin: 0 0 16px; font-weight: 800; }
+.headline em { font-style: normal; color: var(--good); }
+.info { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.tile h3 { text-transform: uppercase; letter-spacing: .5px; font-size: 12px; }
+.g { display: inline-block; width: 22px; height: 22px; color: var(--c); cursor: default; }
+.g svg { fill: currentColor; width: 100%; height: 100%; }
+.g.off { opacity: .18; }
+.g.xl { width: 56px; height: 56px; }
+.g.me { outline: 2px solid var(--ink); outline-offset: 1px; border-radius: 6px; }
+[data-tip] { cursor: help; }
+[data-tip]:focus-visible { outline: 2px solid var(--accentText); outline-offset: 2px; border-radius: 6px; }
+.glyphs { display: flex; flex-wrap: wrap; gap: 3px; align-items: center; }
+.big .v { font-size: 30px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.big .l { color: var(--dim); font-size: 12px; }
+.big.sm { width: 84px; flex: none; } .big.sm .v { font-size: 24px; }
+.path .row { display: flex; align-items: center; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--grid); }
+.path .row:last-child { border: 0; }
+.more { color: var(--dim); font-size: 12px; margin-left: 4px; }
+.combos { display: flex; gap: 12px; flex-wrap: wrap; justify-content: space-around; }
+.combo { display: grid; justify-items: center; gap: 6px; padding: 8px; border-radius: 14px; min-width: 96px; }
+.combo:hover { background: var(--grid); }
+.combo .v { font-size: 28px; font-weight: 800; }
+.combo .mini { width: 80px; }
+.clock { max-width: 240px; margin: 0 auto; }
+.clock .w { transition: opacity .2s; } .clock .w.none { opacity: .15; } .clock .w:hover { opacity: .7; }
+.clock .cv { fill: var(--ink); font-size: 20px; font-weight: 800; }
+.go .clock .w { transform-origin: 100px 100px; animation: pop .7s cubic-bezier(.3,1.3,.5,1) both; animation-delay: calc(var(--i) * 25ms); }
+.go .g { animation: drop .45s cubic-bezier(.3,1.4,.5,1) both; animation-delay: calc(150ms + var(--i) * 30ms); }
+@keyframes pop { from { transform: scale(0); } }
+.bubbles { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+.bub { font: inherit; color: var(--ink); background: none; border: 0; padding: 4px; display: grid; justify-items: center; gap: 4px; cursor: pointer; border-radius: 14px; }
+.bub svg { width: var(--s); height: var(--s); }
+.bub span { font-size: 12px; color: var(--dim); max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bub.on { background: var(--grid); } .bub.on span { color: var(--ink); font-weight: 600; }
+.bub .ini { fill: var(--ink); font-size: 30px; font-weight: 800; }
+.stats { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.st { display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 12px; background: var(--grid); font-size: 18px; }
+.st b { font-variant-numeric: tabular-nums; }
+.games { display: flex; flex-wrap: wrap; gap: 8px; }
+.gt { display: grid; justify-items: center; gap: 4px; padding: 8px; border-radius: 12px; border: 2px solid var(--grid); min-width: 70px; }
+.gt .g { width: 15px; height: 15px; }
+.gt.won { border-color: var(--good); } .gt.lost { border-color: var(--bad); opacity: .85; }
+.gt b { font-size: 16px; }
+.go .gt { animation: rise .5s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i) * 50ms); }
+.tug { display: flex; align-items: center; gap: 14px; }
+.tug .side { display: grid; justify-items: center; }
+.tug .side .v { font-size: 34px; font-weight: 800; }
+.rope { flex: 1; display: flex; height: 22px; border-radius: 11px; overflow: hidden; gap: 3px; }
+.rope i { background: var(--c); }
+.go .rope i { animation: grow-x 1s cubic-bezier(.2,.8,.2,1) both .2s; transform-origin: center; }
+@keyframes grow-x { from { transform: scaleX(0); } }
+.wall { display: grid; gap: 10px; } .wall .g { width: 18px; height: 18px; }
+.row2 { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.row2 > div:last-child { display: flex; gap: 18px; flex-wrap: wrap; }
+.fan { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding-top: 6px; }
+.pc { position: relative; width: 52px; height: 72px; border-radius: 8px; background: #FBF5E6; border: 1px solid #E4DACA; overflow: hidden;
+  display: grid; place-items: center; font: 700 20px/1 Georgia, serif; color: #2B2B2B; box-shadow: 0 4px 12px #0004; transition: transform .2s; }
+.pc::before { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: var(--b); background: #E0485F; opacity: .8; }
+.pc span { position: relative; }
+.pc:hover, .pc:focus { transform: translateY(-6px) rotate(-3deg); }
+.pc.hot { box-shadow: 0 0 0 3px var(--bad), 0 4px 12px #0004; }
+.go .pc { animation: deal .6s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i) * 45ms); }
+.go .pc::before { animation: fill-y 1s cubic-bezier(.2,.8,.2,1) both .5s; }
+@keyframes deal { from { transform: translateY(-30px) rotate(-20deg); opacity: 0; } }
+@keyframes fill-y { from { height: 0; } }
+.verdict { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; border-color: var(--accent); background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 28%, transparent), var(--card)); }
+.verdict p { flex: 1; min-width: 220px; font-size: 18px; margin: 0; font-weight: 600; }
+.bulb { font-size: 28px; }
+.early { display: inline-block; margin-top: 8px; padding: 2px 8px; border-radius: 6px; font-size: 11px; color: var(--warn); border: 1px solid var(--warn); }
+.next { font: inherit; border: 0; border-radius: 12px; padding: 8px 14px; background: var(--accent); color: #fff; cursor: pointer; }
+details.more { margin-top: 22px; }
+details.more > summary { cursor: pointer; color: var(--dim); font-weight: 600; margin-bottom: 12px; }
+#tip { position: absolute; z-index: 9; max-width: 260px; padding: 7px 10px; border-radius: 10px; font-size: 13px; pointer-events: none;
+  background: var(--ink); color: var(--bg3); box-shadow: 0 6px 20px #0006; }
 @media (prefers-reduced-motion: reduce) { .go * { animation: none !important; } }
 </style>
 </head>
@@ -143,6 +222,9 @@ h2.sec { font-size: 15px; font-weight: 600; color: var(--dim); margin: 4px 0 10p
         <button data-tab="bots">Bots</button>
         <button data-tab="game">Game</button>
       </nav>
+      <div class="seg" id="who" title="Which games to count">
+        <button data-who="all" class="on">All games</button><button data-who="people">Only people</button><button data-who="bots">With bots</button>
+      </div>
       <div class="seg" id="range">
         <button data-days="1">Today</button><button data-days="7">7 days</button>
         <button data-days="30" class="on">30 days</button><button data-days="0">All</button>
@@ -178,7 +260,7 @@ const pct = (a, b) => b ? Math.round(100 * a / b) + '%' : '–';
 const num = n => (n ?? 0).toLocaleString('en');
 const avg = (a, b) => b ? (a / b).toFixed(1) : '–';
 const median = a => { if (!a.length) return 0; const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
-const RANK = r => ({ 0: 'Joker', 1: 'A', 11: 'J', 12: 'Q', 13: 'K' }[r] || String(r));
+const RANK = r => ({ 0: '🃏', 1: 'A', 11: 'J', 12: 'Q', 13: 'K' }[r] || String(r));
 
 // ---------- charts (plain SVG) ----------
 function bars(labels, series, { h = 170, stacked = true, axis = true } = {}) {
@@ -226,7 +308,10 @@ function table(id, cols, rows, sortKey) {
 }
 
 // ---------- data ----------
-const state = { data: null, tab: 'overview', days: 30, sort: {}, q: '' };
+const state = { data: null, tab: 'overview', days: 30, who: 'all', sort: {}, q: '' };
+/** A game "with bots" had a bot move at least once (a seat left to a bot, or a bot stepping in for a player). */
+const hasBot = g => g.seats.some(s => s.botMoves > 0);
+const WHO = { all: () => true, people: g => !hasBot(g), bots: hasBot };
 
 function dayList(days) {
   const all = new Set([...Object.keys(state.data.sessions), ...Object.keys(state.data.games)]);
@@ -248,7 +333,7 @@ const hourOf = sec => Number(new Intl.DateTimeFormat('en-GB', { timeZone: state.
 function compute() {
   const d = state.data, days = dayList(state.days);
   const sessions = days.flatMap(x => d.sessions[x] || []);
-  const games = days.flatMap(x => d.games[x] || []);
+  const games = days.flatMap(x => d.games[x] || []).filter(WHO[state.who]);
   const firstSeen = new Map();
   for (const x of Object.keys(d.sessions).sort()) for (const s of d.sessions[x]) if (!firstSeen.has(s[0])) firstSeen.set(s[0], x);
 
@@ -265,14 +350,14 @@ function compute() {
     if (start >= p.last) { p.last = start; if (name) p.name = name; }
   }
   for (const g of games) {
-    const hasBot = g.seats.some(s => s.botMoves > 0);
+    const bot = hasBot(g);
     for (const s of g.seats) for (const h of s.humans) {
       const p = P(h.id);
       p.games++; p.moves += h.moves; p.timeouts += s.timeouts;
       if (h.name) { p.names.add(h.name); if (!p.name) p.name = h.name; }
       if (h.ip) p.ips.add(h.ip);
       if (s.won === true) p.wins++; else if (s.won === false) p.losses++; else p.unfinished++;
-      if (hasBot) p.withBots++; else p.humansOnly++;
+      if (bot) p.withBots++; else p.humansOnly++;
       p.last = Math.max(p.last, Math.round(g.end / 1000));
     }
   }
@@ -283,7 +368,7 @@ function compute() {
 function overview(c) {
   const { days, sessions, games, firstSeen } = c;
   if (!sessions.length && !games.length) return empty('Nothing recorded in these days yet.');
-  const ids = new Set(sessions.map(s => s[0]));
+  const ids = new Set([...sessions.map(s => s[0]), ...games.flatMap(g => g.seats.flatMap(s => s.humans.map(h => h.id)))]);
   const fresh = [...ids].filter(id => days.includes(firstSeen.get(id))).length;
   const won = games.filter(g => g.result === 'won');
   const lab = days.map(x => x.slice(5));
@@ -369,7 +454,7 @@ const mini = (pct, color) => `<div class="mini"><i style="width:${Math.min(100, 
 // ---------- facts shared by the tabs and the key findings ----------
 function botFacts(games) {
   const done = games.filter(g => g.result === 'won');
-  const withBots = games.filter(g => g.seats.some(s => s.botMoves > 0));
+  const withBots = games.filter(hasBot);
   const solo = withBots.filter(g => people(g) === 1);
   // Head to head: finished games where some seats were people's and some were bots'.
   const both = done.filter(g => g.seats.some(s => seatKind(s) === 'human') && g.seats.some(s => seatKind(s) === 'bot'));
@@ -451,7 +536,7 @@ function botsTab(c) {
   if (!games.length) return empty('No games in these days yet.');
   const { withBots, solo, both, P, B, takeovers, teams } = botFacts(games);
   const lab = days.map(x => x.slice(5));
-  const perDay = f => days.map(x => (state.data.games[x] || []).filter(f).length);
+  const perDay = f => days.map(x => (state.data.games[x] || []).filter(WHO[state.who]).filter(f).length);
   const per100 = (x, n) => n ? 100 * x / n : 0;
   const a = css('--accent'), good = css('--good'), bad = css('--bad');
   const capMax = Math.max(per100(P.cap, P.cards), per100(B.cap, B.cards), 0.1), lostMax = Math.max(per100(P.lost, P.cards), per100(B.lost, B.cards), 0.1);
@@ -478,8 +563,8 @@ function botsTab(c) {
         ${Object.entries(teams).map(([k, [n, w]]) => `<tr><td class="l">${k}</td><td>${n}</td><td>${rateText(w, n)}${mini(share(w, n), a)}</td></tr>`).join('')}</tbody></table></div>
         <p class="note">In finished games. With 2 teams an even chance is 50%; with 3 teams, 33%.</p>`)}
       ${card('Games per day: with bots or only people', bars(lab, [
-        { name: 'Only people', color: a, values: perDay(g => !g.seats.some(s => s.botMoves > 0)) },
-        { name: 'With bots', color: good, values: perDay(g => g.seats.some(s => s.botMoves > 0)) }]))}
+        { name: 'Only people', color: a, values: perDay(g => !hasBot(g)) },
+        { name: 'With bots', color: good, values: perDay(hasBot) }]))}
     </div>`;
 }
 
@@ -515,11 +600,212 @@ function gameTab(c) {
     </div>`;
 }
 
+
+// ---------- infographics: every tab is one picture story; words only in tooltips ----------
+const ORDER = ['overview', 'players', 'bots', 'game'];
+const TITLE = { overview: 'Who comes', players: 'The players', bots: 'The bots', game: 'The game' };
+const plural = (n, one, many = one + 's') => `${num(n)} ${n === 1 ? one : many}`;
+const PERSON = '<svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4.5"/><path d="M3.5 22c0-5 3.8-8.5 8.5-8.5s8.5 3.5 8.5 8.5z"/></svg>';
+const BOT = '<svg viewBox="0 0 24 24"><rect x="11" y="1" width="2" height="4" rx="1"/><circle cx="12" cy="2" r="1.8"/><rect x="3" y="5" width="18" height="13" rx="4"/><circle cx="8.5" cy="11.5" r="2" fill="var(--bg3)"/><circle cx="15.5" cy="11.5" r="2" fill="var(--bg3)"/><rect x="7" y="19" width="10" height="3" rx="1.5"/></svg>';
+/** One pictogram: a person or a bot, coloured, with its fact in a tooltip. */
+const glyph = (kind, color, tip = '', cls = '', i = 0) => `<span class="g ${cls}" style="--c:${color};--i:${i}"${tip ? ` data-tip="${esc(tip)}" tabindex="0"` : ''}>${kind === 'bot' ? BOT : PERSON}</span>`;
+const big = (v, label, tip = '') => `<div class="big"${tip ? ` data-tip="${esc(tip)}" tabindex="0"` : ''}><div class="v">${v}</div><div class="l">${esc(label)}</div></div>`;
+const tile = (title, body, cls = '') => `<div class="card tile ${cls}"><h3>${esc(title)}</h3>${body}</div>`;
+const early = n => n < 10 ? `<span class="early" data-tip="Fewer than 10 so far: this can still change." tabindex="0">early days</span>` : '';
+
+function story(tab, head, tiles, verdict) {
+  const i = ORDER.indexOf(tab), next = ORDER[i + 1];
+  return `<div class="story">
+    <p class="kicker">${i + 1} / ${ORDER.length} · ${TITLE[tab]}</p>
+    <h1 class="headline">${head}</h1>
+    <div class="grid info">${tiles.filter(Boolean).join('')}</div>
+    <div class="card verdict"><span class="bulb">💡</span><p>${verdict}</p>${next ? `<button class="next" data-tab="${next}">${TITLE[next]} →</button>` : ''}</div>
+  </div>`;
+}
+/** Who played a game: one person with bots, several people with bots, or only people. */
+const gameKind = g => !hasBot(g) ? 'people' : people(g) > 1 ? 'mixed' : 'solo';
+/** The days each player was seen on, in all the data (to know who came back). */
+function daysSeen() {
+  const m = new Map(), add = (id, d) => (m.get(id) || m.set(id, new Set()).get(id)).add(d);
+  for (const [d, l] of Object.entries(state.data.sessions)) for (const s of l) add(s[0], d);
+  for (const [d, l] of Object.entries(state.data.games)) for (const g of l) for (const s of g.seats) for (const h of s.humans) add(h.id, d);
+  return m;
+}
+const nameOf = c => { const m = new Map(c.players.map(p => [p.id, p.name || p.id])); return id => m.get(id) || id; };
+
+/** A 24-hour clock: one wedge per hour, as long as the visits that started then. */
+function clock(hours, color, center) {
+  const max = Math.max(1, ...hours), R0 = 30, R1 = 92;
+  const pt = (h, r) => { const a = (h / 24) * 2 * Math.PI - Math.PI / 2; return [100 + r * Math.cos(a), 100 + r * Math.sin(a)]; };
+  const wedges = hours.map((n, h) => {
+    const r = R0 + (R1 - R0) * n / max, [x1, y1] = pt(h + 0.08, R0), [x2, y2] = pt(h + 0.08, r), [x3, y3] = pt(h + 0.92, r), [x4, y4] = pt(h + 0.92, R0);
+    return `<path class="w${n ? '' : ' none'}" style="--i:${h}" d="M${x1} ${y1}L${x2} ${y2}A${r} ${r} 0 0 1 ${x3} ${y3}L${x4} ${y4}A${R0} ${R0} 0 0 0 ${x1} ${y1}" fill="${color}" data-tip="${String(h).padStart(2, '0')}:00 · ${plural(n, 'visit')}" tabindex="0"/>`;
+  }).join('');
+  const marks = [0, 6, 12, 18].map(h => { const [x, y] = pt(h, R1 + 6); return `<text x="${x}" y="${y + 3}" text-anchor="middle">${String(h).padStart(2, '0')}</text>`; }).join('');
+  return `<svg class="clock" viewBox="0 0 200 200"><circle cx="100" cy="100" r="${R1}" fill="none" stroke="var(--grid)"/>${wedges}${marks}<text x="100" y="98" text-anchor="middle" class="cv">${center}</text><text x="100" y="114" text-anchor="middle">a visit</text></svg>`;
+}
+
+function overviewStory(c) {
+  const { sessions, games } = c;
+  const name = nameOf(c);
+  const humansOf = list => list.flatMap(g => g.seats.flatMap(s => s.humans.map(h => h.id)));
+  const ids = [...new Set([...sessions.map(s => s[0]), ...humansOf(games)])];
+  if (!ids.length) return '';
+  const played = new Set(humansOf(games)), finished = new Set(humansOf(games.filter(g => g.result === 'won')));
+  const seen = daysSeen(), back = new Set(ids.filter(id => (seen.get(id) || new Set()).size > 1));
+  const a = css('--accent'), good = css('--good'), warn = css('--warn'), bad = css('--bad');
+  // The path every player walks; each icon is a player, lit up while they are still on it.
+  const steps = [['Came', new Set(ids), a], ['Played', played, good], ['Finished', finished, warn], ['Came back', back, bad]];
+  const shown = ids.slice(0, 40);
+  const path = steps.map(([label, set, color]) => `<div class="row"><div class="big sm"><div class="v">${set.size}</div><div class="l">${label}</div></div>
+    <div class="glyphs">${shown.map((id, i) => glyph('person', color, `${name(id)}: ${set.has(id) ? label.toLowerCase() : 'not ' + label.toLowerCase()}`, set.has(id) ? '' : 'off', i)).join('')}${ids.length > shown.length ? `<span class="more">+${ids.length - shown.length}</span>` : ''}</div></div>`).join('');
+  const drops = steps.slice(1).map(([, s], i) => steps[i][1].size ? 1 - s.size / steps[i][1].size : 0);
+  const worst = drops.indexOf(Math.max(...drops));
+  // Who plays with whom.
+  const kinds = { solo: 0, mixed: 0, people: 0 };
+  for (const g of games) kinds[gameKind(g)]++;
+  const combo = (k, glyphs, label) => `<div class="combo" data-tip="${esc(label)}: ${plural(kinds[k], 'game')}, ${share(kinds[k], games.length)}%" tabindex="0">
+    <div class="glyphs">${glyphs}</div><div class="v">${kinds[k]}</div>${mini(share(kinds[k], games.length), a)}</div>`;
+  const P = (n, col) => Array.from({ length: n }, (_, i) => glyph('person', col, '', '', i)).join('');
+  const Bt = n => Array.from({ length: n }, (_, i) => glyph('bot', good, '', '', i)).join('');
+  const hours = Array(24).fill(0);
+  for (const s of sessions) hours[hourOf(s[1])]++;
+  const alone = games.length && kinds.solo >= games.length / 2;
+  return story('overview',
+    `${ids.length} came → <em>${back.size}</em> came back`,
+    [
+      tile('From first visit to coming back', `<div class="path">${path}</div>${early(ids.length)}`, 'wide'),
+      games.length && tile('Who plays with whom', `<div class="combos">
+        ${combo('solo', P(1, a) + Bt(3), 'One person with bots')}${combo('mixed', P(2, a) + Bt(2), 'People with bots')}${combo('people', P(4, a), 'Only people')}</div>`),
+      sessions.length && tile(`When they come (${state.data.tz})`, clock(hours, warn, fmtTime(median(sessions.map(s => s[2]))))),
+    ],
+    [
+      'Most people leave before their first game: make Play one tap.',
+      'Games start but do not finish: games may be too long.',
+      'Nobody has come back yet: invite friends with a room link.',
+    ][worst] + (alone ? ' Most play alone with bots, so bots shape the game.' : ''));
+}
+
+function playersStory(c) {
+  const seen = daysSeen();
+  const list = [...c.players.filter(p => p.games || p.sessions)].sort((x, y) => y.games - x.games || y.last - x.last);
+  if (!list.length) return '';
+  const done = p => p.wins + p.losses;
+  const a = css('--accent'), good = css('--good'), bad = css('--bad'), warn = css('--warn');
+  const maxG = Math.max(1, ...list.map(p => p.games));
+  const sel = list.find(p => p.id === state.player) || list[0];
+  // Each player is a bubble: size = games played, ring = how often they win.
+  const bubble = p => {
+    const s = 56 + 56 * p.games / maxG, w = done(p) ? share(p.wins, done(p)) : 0, back = (seen.get(p.id) || new Set()).size > 1;
+    return `<button class="bub${p.id === sel.id ? ' on' : ''}" data-player="${esc(p.id)}" style="--s:${s}px" data-tip="${esc(p.name || p.id)}: ${plural(p.games, 'game')}${done(p) ? `, ${w}% won` : ''}${back ? ', came back' : ''}">
+      <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="none" stroke="var(--grid)" stroke-width="8"/>
+      <circle class="arc" cx="50" cy="50" r="44" fill="none" stroke="${good}" stroke-width="8" stroke-linecap="round" pathLength="100" style="--p:${Math.max(0.001, w)}" transform="rotate(-90 50 50)"/>
+      <text x="50" y="58" text-anchor="middle" class="ini">${esc((p.name || '?').slice(0, 1).toUpperCase())}</text></svg>
+      <span>${esc(p.name || '—')}${back ? ' ↺' : ''}</span></button>`;
+  };
+  // The chosen player's games, oldest first: each tile shows the seats (people and bots) and the result.
+  const mine = c.games.filter(g => g.seats.some(s => s.humans.some(h => h.id === sel.id))).sort((x, y) => x.start - y.start);
+  const gameTile = (g, i) => {
+    const seat = g.seats.find(s => s.humans.some(h => h.id === sel.id));
+    const res = g.result !== 'won' ? 'open' : seat.won ? 'won' : 'lost';
+    const when = new Date(g.end).toLocaleString('en-GB', { timeZone: state.data.tz, day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    const who = g.seats.map(s => s.humans.length ? s.humans.map(h => h.name).join('/') : 'bot').join(', ');
+    return `<div class="gt ${res}" style="--i:${i}" data-tip="${esc(when)} · ${res === 'open' ? 'not finished' : res} · ${esc(who)} · ${fmtTime(60 * minutes(g))}" tabindex="0">
+      <div class="glyphs">${g.seats.map((s, k) => glyph(s.humans.length ? 'person' : 'bot', `var(${SEATS[s.team]})`, '', s === seat ? 'me' : '')).join('')}</div>
+      <b>${res === 'won' ? '🏆' : res === 'lost' ? '✕' : '…'}</b></div>`;
+  };
+  const stat = (icon, v, tip) => `<div class="st" data-tip="${esc(tip)}" tabindex="0"><span>${icon}</span><b>${v}</b></div>`;
+  const best = list.filter(p => done(p) >= 3).sort((x, y) => y.wins / done(y) - x.wins / done(x))[0];
+  return story('players',
+    `${esc(list[0].name || 'One player')} leads with <em>${plural(list[0].games, 'game')}</em>`,
+    [
+      tile('Tap a player · bigger = more games · ring = wins', `<div class="bubbles">${list.map(bubble).join('')}</div>`, 'wide'),
+      tile(sel.name || sel.id, `<div class="stats">
+        ${stat('🕒', fmtTime(sel.sec), `${plural(sel.sessions, 'visit')}, ${fmtTime(sel.sec)} in all`)}
+        ${stat('🎲', sel.games, plural(sel.games, 'game'))}
+        ${stat('🏆', done(sel) ? share(sel.wins, done(sel)) + '%' : '–', `won ${sel.wins} of ${done(sel)} finished`)}
+        ${stat('🤖', sel.withBots, `${sel.withBots} with bots, ${sel.humansOnly} only people`)}
+        ${stat('⏱', sel.timeouts, `ran out of turn time ${plural(sel.timeouts, 'time')}`)}</div>
+        <div class="games">${mine.map(gameTile).join('') || '<span class="sub">No games yet.</span>'}</div>`, 'wide'),
+    ],
+    best ? `${esc(best.name || 'One player')} wins most (${share(best.wins, done(best))}%). Ask the ones who came back (↺) what keeps them here.`
+      : 'Too few finished games to say who plays best. Ask the ones who came back (↺) what keeps them.');
+}
+
+function botsStory(c) {
+  const { games } = c;
+  if (!games.length) return '';
+  const { withBots, both, P, B, teams } = botFacts(games);
+  const a = css('--accent'), good = css('--good'), bad = css('--bad');
+  const p = share(P.wins, P.seats), q = share(B.wins, B.seats), gap = p - q;
+  const level = !both.length ? null : Math.abs(gap) < 10 ? 'even' : gap > 0 ? 'weak' : 'strong';
+  // Tug of war: how often people's seats and bots' seats win, side by side.
+  const tug = both.length ? `<div class="tug">
+      <div class="side">${glyph('person', a, '', 'xl')}<div class="v">${p}%</div></div>
+      <div class="rope" data-tip="In ${plural(both.length, 'finished game')} with both: people won ${P.wins} of ${P.seats} seats, bots ${B.wins} of ${B.seats}" tabindex="0">
+        <i style="--c:${a};flex:${Math.max(1, p)}"></i><i style="--c:${good};flex:${Math.max(1, q)}"></i></div>
+      <div class="side">${glyph('bot', good, '', 'xl')}<div class="v">${q}%</div></div></div>${early(both.length)}` : '<span class="sub">No finished game with both yet.</span>';
+  // Every seat in those games: lit = it won.
+  const wall = k => both.flatMap(g => g.seats.filter(s => seatKind(s) === k).map(s => ({ s, g })))
+    .map(({ s, g }, i) => glyph(k === 'human' ? 'person' : 'bot', k === 'human' ? a : good, `${k === 'human' ? s.humans.map(h => h.name).join('/') : 'Bot'}: ${s.won ? 'won' : 'lost'}, ${s.captured} sent home, ${s.lost} lost`, s.won ? '' : 'off', i)).join('');
+  const team = (k, glyphs) => { const [n, w] = teams[k]; return n ? `<div class="combo" data-tip="${esc(k)}: won ${w} of ${n}" tabindex="0"><div class="glyphs">${glyphs}</div>${ring(share(w, n), good, share(w, n) + '%', 50, 64)}</div>` : ''; };
+  return story('bots',
+    level ? { even: 'Bots play <em>as well</em> as people', weak: 'People <em>beat</em> the bots', strong: 'Bots <em>beat</em> people' }[level] : `Bots played in <em>${share(withBots.length, games.length)}%</em> of games`,
+    [
+      tile('Who wins more', tug, 'wide'),
+      both.length && tile('Every seat · lit = won', `<div class="wall"><div class="glyphs">${wall('human')}</div><div class="glyphs">${wall('bot')}</div></div>`),
+      tile('Teams · tick = even chance', `<div class="combos">${team('Only people', glyph('person', a) + glyph('person', a))}${team('People with a bot partner', glyph('person', a) + glyph('bot', good))}${team('Only bots', glyph('bot', good) + glyph('bot', good))}</div>`),
+    ],
+    level === 'strong' ? 'Newcomers alone with bots will mostly lose: add an easier bot for first games.'
+      : level === 'weak' ? 'Wins against bots come cheap: a stronger bot would make solo games exciting.'
+      : level === 'even' ? 'A game alone with bots feels fair. Keep the bots as they are.'
+      : 'Too early to judge the bots.');
+}
+
+function gameStory(c) {
+  const { games } = c;
+  if (!games.length) return '';
+  const { done, known, firstWins, even, close, ranks, rk, burnPct, left, restarted } = gameFacts(games);
+  const a = css('--accent'), good = css('--good'), warn = css('--warn'), bad = css('--bad');
+  const fin = share(done.length, games.length), len = done.length ? median(done.map(minutes)) : 0;
+  const fp = share(firstWins, known.length), cl = close.length ? Math.round(100 * median(close)) : 0;
+  const fairStart = known.length && Math.abs(fp - even) < 15;
+  const hard = burnPct.indexOf(Math.max(...burnPct));
+  // The deck: each card filled from the bottom as often as it was burned (no move possible).
+  const fan = rk.map((r, i) => `<div class="pc${i === hard ? ' hot' : ''}" style="--b:${burnPct[i]}%;--i:${i}" data-tip="${RANK(r)}: played ${ranks[r][0]}, burned ${ranks[r][1]} (${burnPct[i]}%)" tabindex="0"><span>${RANK(r)}</span></div>`).join('');
+  return story('game',
+    `<em>${fin}%</em> of games end${done.length ? `, in ${fmtTime(60 * len)}` : ''}`,
+    [
+      tile('Do games end?', `<div class="row2">${ring(fin, good, fin + '%')}<div>${big(done.length, 'finished')}${big(left.length, 'left', 'Back to the lobby or a new game before anyone won')}${big(restarted.length, 'cut', 'Cut by a server restart')}</div></div>${early(games.length)}`),
+      known.length && tile('Does going first win?', `<div class="row2">${ring(fp, warn, fp + '%', even)}${big(fairStart ? 'Fair' : fp > even ? 'Edge' : 'Handicap', `even chance = ${even}%`, `The starting team won ${firstWins} of ${known.length}`)}</div>`),
+      close.length && tile('How close was the loser?', `<div class="row2">${marbles(Math.round(cl / 12.5), 8, bad)}${big(cl + '%', 'marbles home', 'Median share of the losing team’s marbles already home at the end')}</div>`),
+      rk.length && tile('Cards burned · red = no move', `<div class="fan">${fan}</div>`, 'wide'),
+    ],
+    [fin < 60 ? 'Many games never end: try a shorter mode.' : 'Games end.',
+      known.length ? (fairStart ? 'The start is fair.' : fp > even ? 'Going first is too big an edge.' : 'Going first is a handicap.') : '',
+      close.length ? (cl >= 50 ? 'And they stay close to the end.' : 'But many are one-sided.') : '',
+      rk.length ? `${RANK(rk[hard])} wastes the most turns.` : ''].filter(Boolean).join(' '));
+}
+
+/** Tooltips: hover on a computer, tap on a phone. */
+const tipEl = document.createElement('div');
+tipEl.id = 'tip'; tipEl.hidden = true; document.body.appendChild(tipEl);
+function showTip(el) {
+  if (!el) { tipEl.hidden = true; return; }
+  tipEl.textContent = el.dataset.tip; tipEl.hidden = false;
+  const r = el.getBoundingClientRect(), w = tipEl.offsetWidth;
+  tipEl.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px';
+  tipEl.style.top = (r.top + scrollY - tipEl.offsetHeight - 8 < scrollY ? r.bottom + scrollY + 8 : r.top + scrollY - tipEl.offsetHeight - 8) + 'px';
+}
+document.addEventListener('pointerover', e => { if (e.pointerType === 'mouse') showTip(e.target.closest('[data-tip]')); });
+document.addEventListener('focusin', e => showTip(e.target.closest('[data-tip]')));
+addEventListener('scroll', () => { tipEl.hidden = true; }, { passive: true });
+
 const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 /** Counts every number in the cards' big figures up from zero, keeping its format. */
 function countUp(root) {
   const nodes = [];
-  for (const el of root.querySelectorAll('.kpi .v, .ring .rc')) {
+  for (const el of root.querySelectorAll('.kpi .v, .ring .rc, .big .v, .combo .v, .tug .v, .clock .cv')) {
     const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
     for (let n; (n = w.nextNode());) if (/\d/.test(n.nodeValue)) nodes.push({ n, text: n.nodeValue });
   }
@@ -534,10 +820,12 @@ function countUp(root) {
 
 function render(animate = true) {
   const c = compute();
-  $('overview').innerHTML = overview(c);
-  $('players').innerHTML = playersTab(c);
-  $('bots').innerHTML = botsTab(c);
-  $('game').innerHTML = gameTab(c);
+  const more = html => `<details class="more"${state.open ? ' open' : ''}><summary>All the numbers</summary>${html}</details>`;
+  $('overview').innerHTML = overviewStory(c) + more(overview(c));
+  $('players').innerHTML = playersStory(c) + more(playersTab(c));
+  $('bots').innerHTML = botsStory(c) + more(botsTab(c));
+  $('game').innerHTML = gameStory(c) + more(gameTab(c));
+  for (const d of document.querySelectorAll('details.more')) d.ontoggle = () => { state.open = d.open; };
   for (const s of document.querySelectorAll('main section, section')) {
     s.hidden = s.id !== state.tab;
     s.classList.toggle('go', animate && !still());
@@ -549,9 +837,13 @@ function render(animate = true) {
 }
 
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-tab]'), r = e.target.closest('[data-days]'), th = e.target.closest('th[data-k]');
-  if (t) { state.tab = t.dataset.tab; for (const b of document.querySelectorAll('[data-tab]')) b.classList.toggle('on', b === t); render(); }
+  const t = e.target.closest('[data-tab]'), r = e.target.closest('[data-days]'), w = e.target.closest('[data-who]'), th = e.target.closest('th[data-k]');
+  if (t) { state.tab = t.dataset.tab; for (const b of document.querySelectorAll('nav [data-tab]')) b.classList.toggle('on', b.dataset.tab === state.tab); render(); if (t.classList.contains('next')) scrollTo({ top: 0, behavior: still() ? 'auto' : 'smooth' }); }
   if (r) { state.days = Number(r.dataset.days); for (const b of document.querySelectorAll('[data-days]')) b.classList.toggle('on', b === r); render(); }
+  if (w) { state.who = w.dataset.who; for (const b of document.querySelectorAll('[data-who]')) b.classList.toggle('on', b === w); render(); }
+  const pl = e.target.closest('[data-player]');
+  if (pl) { state.player = pl.dataset.player; render(false); }
+  if (!pl && e.pointerType !== 'mouse') showTip(e.target.closest('[data-tip]'));
   if (th) { const id = th.dataset.t, k = th.dataset.k, s = state.sort[id]; state.sort[id] = { key: k, dir: s && s.key === k ? -s.dir : -1 }; render(false); }
 });
 
